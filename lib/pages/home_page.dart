@@ -60,11 +60,28 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ListenableBuilder(
+              listenable: widget.controller,
+              builder: (context, _) => SegmentedButton<TaskFilter>(
+                segments: const [
+                  ButtonSegment(value: TaskFilter.all, label: Text('すべて')),
+                  ButtonSegment(value: TaskFilter.active, label: Text('未完了')),
+                  ButtonSegment(
+                      value: TaskFilter.completed, label: Text('完了済み')),
+                ],
+                selected: {widget.controller.filter},
+                onSelectionChanged: (selection) =>
+                    widget.controller.setFilter(selection.first),
+              ),
+            ),
+          ),
           Expanded(
             child: ListenableBuilder(
               listenable: widget.controller,
               builder: (context, _) {
-                final tasks = widget.controller.tasks;
+                final tasks = widget.controller.visibleTasks;
                 if (tasks.isEmpty) {
                   return const Center(child: Text('タスクはありません'));
                 }

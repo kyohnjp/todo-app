@@ -170,4 +170,53 @@ void main() {
       expect(notifications, 3);
     });
   });
+
+  group('フィルタ（US2 / FR-006）', () {
+    Future<TodoListController> controllerWith2Done3Active() async {
+      final controller = TodoListController(RecordingTaskRepository());
+      await controller.load();
+      for (final title in ['a', 'b', 'c', 'd', 'e']) {
+        controller.add(title);
+      }
+      controller.toggleCompleted(controller.tasks[0].id); // a を完了
+      controller.toggleCompleted(controller.tasks[1].id); // b を完了
+      return controller;
+    }
+
+    test('初期値はall、visibleTasksは全件と一致する', () async {
+      final controller = await controllerWith2Done3Active();
+
+      expect(controller.filter, TaskFilter.all);
+      expect(controller.visibleTasks.length, 5);
+    });
+
+    test('activeで未完了のみ、completedで完了のみに絞られる', () async {
+      final controller = await controllerWith2Done3Active();
+
+      controller.setFilter(TaskFilter.active);
+      expect(controller.visibleTasks.map((t) => t.title), ['c', 'd', 'e']);
+
+      controller.setFilter(TaskFilter.completed);
+      expect(controller.visibleTasks.map((t) => t.title), ['a', 'b']);
+    });
+
+    test('フィルタは表示の絞り込みのみで、元データを変更しない', () async {
+      final controller = await controllerWith2Done3Active();
+
+      controller.setFilter(TaskFilter.completed);
+      controller.setFilter(TaskFilter.all);
+
+      expect(controller.tasks.map((t) => t.title), ['a', 'b', 'c', 'd', 'e']);
+    });
+
+    test('setFilterでリスナーに通知される', () async {
+      final controller = await controllerWith2Done3Active();
+      var notifications = 0;
+      controller.addListener(() => notifications++);
+
+      controller.setFilter(TaskFilter.active);
+
+      expect(notifications, 1);
+    });
+  });
 }

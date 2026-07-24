@@ -76,14 +76,14 @@
 
 ### Tests for User Story 2（憲法II: 必須・実装より先）⚠️
 
-- [ ] T013 [P] [US2] コントローラのフィルタテストを追加（TaskFilter切替でvisibleTasksが正しく絞られる、初期値all、フィルタが元データを変更しない）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
-- [ ] T014 [P] [US2] フィルタのウィジェットテストを追加（spec US2受け入れシナリオ1〜4: 各フィルタの表示内容、未完了表示中の完了操作で一覧から消える、初期選択=すべて、絞り込み結果0件時の空表示）in `test/pages/home_page_test.dart` — **失敗を確認**
+- [x] T013 [P] [US2] コントローラのフィルタテストを追加（TaskFilter切替でvisibleTasksが正しく絞られる、初期値all、フィルタが元データを変更しない）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
+- [x] T014 [P] [US2] フィルタのウィジェットテストを追加（spec US2受け入れシナリオ1〜4: 各フィルタの表示内容、未完了表示中の完了操作で一覧から消える、初期選択=すべて、絞り込み結果0件時の空表示）in `test/pages/home_page_test.dart` — **失敗を確認**
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] コントローラにTaskFilterとvisibleTasksを実装 in `lib/controllers/todo_list_controller.dart`
-- [ ] T016 [US2] ホーム画面にフィルタバー（すべて/未完了/完了済み）を実装 in `lib/pages/home_page.dart`
-- [ ] T017 [US2] 検証ゲート: analyze/test クリーン、quickstart.md「US2」手動シナリオ実施
+- [x] T015 [US2] コントローラにTaskFilterとvisibleTasksを実装 in `lib/controllers/todo_list_controller.dart`
+- [x] T016 [US2] ホーム画面にフィルタバー（すべて/未完了/完了済み）を実装 in `lib/pages/home_page.dart`
+- [x] T017 [US2] 検証ゲート: analyze/test クリーン、quickstart.md「US2」手動シナリオ実施
 
 **Checkpoint**: ブランチ `feat/us2-filter` からPR → レビュー → マージ
 

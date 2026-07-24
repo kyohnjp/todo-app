@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../models/task.dart';
 import '../services/task_repository.dart';
 
+/// 一覧の表示フィルタ。画面の状態であり永続化しない（data-model.md）。
+enum TaskFilter { all, active, completed }
+
 /// タスク一覧の状態と操作。UIは本クラスのみを参照する。
 ///
 /// 各操作はメモリ上の状態を即時更新して通知し、保存は非同期で直列に行う
@@ -16,6 +19,25 @@ class TodoListController extends ChangeNotifier {
   Future<void> _pendingSave = Future.value();
 
   List<Task> get tasks => List.unmodifiable(_tasks);
+
+  TaskFilter _filter = TaskFilter.all;
+  TaskFilter get filter => _filter;
+
+  /// 現在のフィルタで絞り込んだ表示用一覧（FR-006）。元データは変更しない。
+  List<Task> get visibleTasks => switch (_filter) {
+        TaskFilter.all => tasks,
+        TaskFilter.active =>
+          List.unmodifiable(_tasks.where((task) => !task.isCompleted)),
+        TaskFilter.completed =>
+          List.unmodifiable(_tasks.where((task) => task.isCompleted)),
+      };
+
+  /// フィルタは画面の状態なので保存はしない。
+  void setFilter(TaskFilter filter) {
+    if (filter == _filter) return;
+    _filter = filter;
+    notifyListeners();
+  }
 
   /// 保存済みタスクを読み込む。採番は既存の最大id+1から再開する（research.md R4）。
   Future<void> load() async {

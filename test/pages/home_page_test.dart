@@ -142,4 +142,81 @@ void main() {
       expect(find.text('タスクはありません'), findsNothing);
     });
   });
+
+  group('US2: 完了/未完了フィルタ', () {
+    /// 完了2件（タスクA・B）・未完了3件（C・D・E）の状態を作る
+    Future<void> setup2Done3Active(WidgetTester tester) async {
+      for (final title in ['タスクA', 'タスクB', 'タスクC', 'タスクD', 'タスクE']) {
+        await addTask(tester, title);
+      }
+      await tester.tap(find.byType(Checkbox).at(0));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).at(1));
+      await tester.pump();
+    }
+
+    Future<void> selectFilter(WidgetTester tester, String label) async {
+      await tester.tap(find.text(label));
+      await tester.pump();
+    }
+
+    testWidgets('US2-4: 初期状態では「すべて」が選択され全タスクが表示される', (tester) async {
+      await pumpHomePage(tester);
+      await setup2Done3Active(tester);
+
+      expect(find.byType(ListTile), findsNWidgets(5));
+      final segmented =
+          tester.widget<SegmentedButton<TaskFilter>>(
+              find.byType(SegmentedButton<TaskFilter>));
+      expect(segmented.selected, {TaskFilter.all});
+    });
+
+    testWidgets('US2-1: 「未完了」フィルタで未完了の3件のみ表示される', (tester) async {
+      await pumpHomePage(tester);
+      await setup2Done3Active(tester);
+
+      await selectFilter(tester, '未完了');
+
+      expect(find.byType(ListTile), findsNWidgets(3));
+      expect(find.text('タスクA'), findsNothing);
+      expect(find.text('タスクC'), findsOneWidget);
+    });
+
+    testWidgets('US2-2: 「完了済み」フィルタで完了の2件のみ表示される', (tester) async {
+      await pumpHomePage(tester);
+      await setup2Done3Active(tester);
+
+      await selectFilter(tester, '完了済み');
+
+      expect(find.byType(ListTile), findsNWidgets(2));
+      expect(find.text('タスクA'), findsOneWidget);
+      expect(find.text('タスクC'), findsNothing);
+    });
+
+    testWidgets('US2-3: 「未完了」表示中に完了チェックを付けるとその場で一覧から消える', (tester) async {
+      await pumpHomePage(tester);
+      await setup2Done3Active(tester);
+      await selectFilter(tester, '未完了');
+
+      // 未完了一覧の先頭（タスクC）にチェックを付ける
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      expect(find.text('タスクC'), findsNothing);
+      expect(find.byType(ListTile), findsNWidgets(2));
+    });
+
+    testWidgets('Edge Case: 絞り込み結果が0件でも空表示が出てフィルタ選択は維持される', (tester) async {
+      await pumpHomePage(tester);
+      await addTask(tester, '未完了だけのタスク');
+
+      await selectFilter(tester, '完了済み');
+
+      expect(find.text('タスクはありません'), findsOneWidget);
+      final segmented =
+          tester.widget<SegmentedButton<TaskFilter>>(
+              find.byType(SegmentedButton<TaskFilter>));
+      expect(segmented.selected, {TaskFilter.completed});
+    });
+  });
 }
