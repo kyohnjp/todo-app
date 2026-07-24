@@ -26,8 +26,8 @@
 
 **Purpose**: 依存の追加とscaffoldの整理
 
-- [ ] T001 `pubspec.yaml` に `shared_preferences` を追加し `flutter pub get` を実行
-- [ ] T002 scaffoldの `test/widget_test.dart`（カウンターテスト）を削除（US1で実テストに置き換わるまでテスト0件になるが、`lib/main.dart` の置き換え（T011）まではanalyzeが通ることを確認）
+- [x] T001 `pubspec.yaml` に `shared_preferences` を追加し `flutter pub get` を実行
+- [x] T002 scaffoldの `test/widget_test.dart`（カウンターテスト）を削除（US1で実テストに置き換わるまでテスト0件になるが、`lib/main.dart` の置き換え（T011）まではanalyzeが通ることを確認）
 
 ---
 
@@ -37,10 +37,10 @@
 
 **⚠️ CRITICAL**: このフェーズ完了までユーザーストーリーの実装を開始しない
 
-- [ ] T003 [P] Taskモデルのテストを作成（JSON往復・`dueDate` null/日付の両対応・title検証の素材）in `test/models/task_test.dart` — **先に書き、失敗を確認**
-- [ ] T004 Taskモデルを実装（`id`/`title`/`isCompleted`/`dueDate`、`toJson`/`fromJson`、data-model.mdのV1〜V3準拠）in `lib/models/task.dart`
-- [ ] T005 [P] TaskRepositoryのテストを作成（保存→読込の往復、キー不在→空、パース不能→空、構造不正→空、不正要素の読み飛ばし = contracts/storage-schema.md 読込規則1〜5）in `test/services/task_repository_test.dart` — **先に書き、失敗を確認**
-- [ ] T006 TaskRepositoryを実装（キー `todo_app.tasks`、スキーマv1準拠の読込/全量書込）in `lib/services/task_repository.dart`
+- [x] T003 [P] Taskモデルのテストを作成（JSON往復・`dueDate` null/日付の両対応・title検証の素材）in `test/models/task_test.dart` — **先に書き、失敗を確認**
+- [x] T004 Taskモデルを実装（`id`/`title`/`isCompleted`/`dueDate`、`toJson`/`fromJson`、data-model.mdのV1〜V3準拠）in `lib/models/task.dart`
+- [x] T005 [P] TaskRepositoryのテストを作成（保存→読込の往復、キー不在→空、パース不能→空、構造不正→空、不正要素の読み飛ばし = contracts/storage-schema.md 読込規則1〜5）in `test/services/task_repository_test.dart` — **先に書き、失敗を確認**
+- [x] T006 TaskRepositoryを実装（キー `todo_app.tasks`、スキーマv1準拠の読込/全量書込）in `lib/services/task_repository.dart`
 
 **Checkpoint**: `flutter test`・`flutter analyze` クリーン → 基盤完成。ここまでを最初のPRに含める（US1と同一PRでも可）
 
@@ -54,15 +54,15 @@
 
 ### Tests for User Story 1（憲法II: 必須・実装より先）⚠️
 
-- [ ] T007 [P] [US1] TodoListControllerのユニットテストを作成（初期ロード、add/toggle/remove、空・空白title拒否で状態不変、採番の単調増加、操作ごとの保存呼び出し）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
-- [ ] T008 [P] [US1] ホーム画面のウィジェットテストを作成（spec US1受け入れシナリオ1〜6: 追加表示・完了の見た目区別・チェック解除・削除・空入力無視、＋タスク0件時の空状態表示）in `test/pages/home_page_test.dart` — **失敗を確認**
+- [x] T007 [P] [US1] TodoListControllerのユニットテストを作成（初期ロード、add/toggle/remove、空・空白title拒否で状態不変、採番の単調増加、操作ごとの保存呼び出し）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
+- [x] T008 [P] [US1] ホーム画面のウィジェットテストを作成（spec US1受け入れシナリオ1〜6: 追加表示・完了の見た目区別・チェック解除・削除・空入力無視、＋タスク0件時の空状態表示）in `test/pages/home_page_test.dart` — **失敗を確認**
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] TodoListController（ChangeNotifier）を実装（リポジトリ注入、tasks公開、add/toggleCompleted/remove、変更ごとに非同期保存）in `lib/controllers/todo_list_controller.dart`
-- [ ] T010 [US1] ホーム画面を実装（入力欄＋追加、タスク一覧、完了チェックボックス＋打ち消し表示、削除ボタン、空状態表示）in `lib/pages/home_page.dart`
-- [ ] T011 [US1] `lib/main.dart` をエントリポイントとして置き換え（MaterialApp、リポジトリ＋コントローラの生成とHomePageへの接続）
-- [ ] T012 [US1] 検証ゲート: `flutter analyze` && `flutter test` クリーン、quickstart.md「US1」手動シナリオをChromeで実施
+- [x] T009 [US1] TodoListController（ChangeNotifier）を実装（リポジトリ注入、tasks公開、add/toggleCompleted/remove、変更ごとに非同期保存）in `lib/controllers/todo_list_controller.dart`
+- [x] T010 [US1] ホーム画面を実装（入力欄＋追加、タスク一覧、完了チェックボックス＋打ち消し表示、削除ボタン、空状態表示）in `lib/pages/home_page.dart`
+- [x] T011 [US1] `lib/main.dart` をエントリポイントとして置き換え（MaterialApp、リポジトリ＋コントローラの生成とHomePageへの接続）
+- [x] T012 [US1] 検証ゲート: `flutter analyze` && `flutter test` クリーン、quickstart.md「US1」手動シナリオをChromeで実施
 
 **Checkpoint**: featureブランチ `feat/us1-basic-tasks` からPR作成 → 人間レビュー → mainへマージ。**これ単体でMVP**
 
