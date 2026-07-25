@@ -27,6 +27,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// Flutter webは日本語フォントを遅延ロードするため、初回描画時の文字幅計測が
+  /// 不正確でセグメントのラベルが折り返されたまま残ることがある。
+  /// フォント計測に依存しない固定幅にして回避する。
+  Widget _segmentLabel(String text) => SizedBox(
+        width: 64,
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.visible,
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,11 +74,31 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ListenableBuilder(
+              listenable: widget.controller,
+              builder: (context, _) => SegmentedButton<TaskFilter>(
+                segments: [
+                  ButtonSegment(
+                      value: TaskFilter.all, label: _segmentLabel('すべて')),
+                  ButtonSegment(
+                      value: TaskFilter.active, label: _segmentLabel('未完了')),
+                  ButtonSegment(
+                      value: TaskFilter.completed,
+                      label: _segmentLabel('完了済み')),
+                ],
+                selected: {widget.controller.filter},
+                onSelectionChanged: (selection) =>
+                    widget.controller.setFilter(selection.first),
+              ),
+            ),
+          ),
           Expanded(
             child: ListenableBuilder(
               listenable: widget.controller,
               builder: (context, _) {
-                final tasks = widget.controller.tasks;
+                final tasks = widget.controller.visibleTasks;
                 if (tasks.isEmpty) {
                   return const Center(child: Text('タスクはありません'));
                 }
