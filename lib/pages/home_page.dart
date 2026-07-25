@@ -27,6 +27,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// Flutter webは日本語フォントを遅延ロードするため、初回描画時の文字幅計測が
+  /// 不正確でセグメントのラベルが折り返されたまま残ることがある。
+  /// フォント計測に依存しない固定幅にして回避する。
+  Widget _segmentLabel(String text) => SizedBox(
+        width: 64,
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.visible,
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,11 +79,14 @@ class _HomePageState extends State<HomePage> {
             child: ListenableBuilder(
               listenable: widget.controller,
               builder: (context, _) => SegmentedButton<TaskFilter>(
-                segments: const [
-                  ButtonSegment(value: TaskFilter.all, label: Text('すべて')),
-                  ButtonSegment(value: TaskFilter.active, label: Text('未完了')),
+                segments: [
                   ButtonSegment(
-                      value: TaskFilter.completed, label: Text('完了済み')),
+                      value: TaskFilter.all, label: _segmentLabel('すべて')),
+                  ButtonSegment(
+                      value: TaskFilter.active, label: _segmentLabel('未完了')),
+                  ButtonSegment(
+                      value: TaskFilter.completed,
+                      label: _segmentLabel('完了済み')),
                 ],
                 selected: {widget.controller.filter},
                 onSelectionChanged: (selection) =>
