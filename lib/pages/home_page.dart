@@ -27,6 +27,17 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// タスク名の編集ダイアログ（US3）。空文字での保存は拒否され元の名前が残る。
+  Future<void> _showEditDialog(int id, String currentTitle) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => _EditTaskDialog(
+        currentTitle: currentTitle,
+        onSave: (title) => widget.controller.rename(id, title),
+      ),
+    );
+  }
+
   /// Flutter webは日本語フォントを遅延ロードするため、初回描画時の文字幅計測が
   /// 不正確でセグメントのラベルが折り返されたまま残ることがある。
   /// フォント計測に依存しない固定幅にして回避する。
@@ -107,6 +118,7 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     final task = tasks[index];
                     return ListTile(
+                      onTap: () => _showEditDialog(task.id, task.title),
                       leading: Checkbox(
                         value: task.isCompleted,
                         onChanged: (_) =>
@@ -134,6 +146,57 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// タスク名編集ダイアログ。TextEditingControllerの寿命を自身のStateで管理する
+/// （閉じるアニメーション中の破棄済みcontroller参照を防ぐ）。
+class _EditTaskDialog extends StatefulWidget {
+  const _EditTaskDialog({required this.currentTitle, required this.onSave});
+
+  final String currentTitle;
+  final bool Function(String title) onSave;
+
+  @override
+  State<_EditTaskDialog> createState() => _EditTaskDialogState();
+}
+
+class _EditTaskDialogState extends State<_EditTaskDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.currentTitle);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    widget.onSave(_controller.text);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('タスク名を編集'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: const InputDecoration(border: OutlineInputBorder()),
+        onSubmitted: (_) => _save(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('キャンセル'),
+        ),
+        FilledButton(
+          onPressed: _save,
+          child: const Text('保存'),
+        ),
+      ],
     );
   }
 }

@@ -219,4 +219,82 @@ void main() {
       expect(segmented.selected, {TaskFilter.completed});
     });
   });
+
+  group('US3: タスク名の編集', () {
+    Finder dialogTextField() => find.descendant(
+        of: find.byType(AlertDialog), matching: find.byType(TextField));
+
+    Future<void> openEditDialog(WidgetTester tester, String title) async {
+      await tester.tap(find.widgetWithText(ListTile, title));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('US3-1: タスクをタップすると現在の名前が入った編集ダイアログが開く', (tester) async {
+      await pumpHomePage(tester);
+      await addTask(tester, '牛乳を買う');
+
+      await openEditDialog(tester, '牛乳を買う');
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      final textField = tester.widget<TextField>(dialogTextField());
+      expect(textField.controller!.text, '牛乳を買う');
+    });
+
+    testWidgets('US3-1: 名前を変えて保存すると一覧の表示が変わり、完了状態は維持される', (tester) async {
+      await pumpHomePage(tester);
+      await addTask(tester, '牛乳を買う');
+      await tester.tap(find.byType(Checkbox));
+      await tester.pump();
+
+      await openEditDialog(tester, '牛乳を買う');
+      await tester.enterText(dialogTextField(), '牛乳と卵を買う');
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('牛乳と卵を買う'), findsOneWidget);
+      expect(find.text('牛乳を買う'), findsNothing);
+      final checkbox = tester.widget<Checkbox>(find.byType(Checkbox));
+      expect(checkbox.value, true);
+    });
+
+    testWidgets('US3-2: 空文字で保存しようとしても元の名前が維持される', (tester) async {
+      await pumpHomePage(tester);
+      await addTask(tester, '元の名前');
+
+      await openEditDialog(tester, '元の名前');
+      await tester.enterText(dialogTextField(), '   ');
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('元の名前'), findsOneWidget);
+    });
+
+    testWidgets('キャンセルすると名前は変わらない', (tester) async {
+      await pumpHomePage(tester);
+      await addTask(tester, '元の名前');
+
+      await openEditDialog(tester, '元の名前');
+      await tester.enterText(dialogTextField(), '変えようとした名前');
+      await tester.tap(find.text('キャンセル'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('元の名前'), findsOneWidget);
+      expect(find.text('変えようとした名前'), findsNothing);
+    });
+
+    testWidgets('US3-3: 編集後の名前が保存され、新しいコントローラで復元される', (tester) async {
+      final controller = await pumpHomePage(tester);
+      await addTask(tester, '編集前');
+
+      await openEditDialog(tester, '編集前');
+      await tester.enterText(dialogTextField(), '編集後');
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+      await controller.idle();
+
+      final reloaded = TodoListController(TaskRepository());
+      await reloaded.load();
+      expect(reloaded.tasks.single.title, '編集後');
+    });
+  });
 }
