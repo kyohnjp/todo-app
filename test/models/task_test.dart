@@ -84,4 +84,59 @@ void main() {
       expect(Task.fromJson([1, 2]), isNull);
     });
   });
+
+  group('Task.isOverdue（US4 / FR-009。固定時刻で判定）', () {
+    final today = DateTime(2026, 8, 1);
+
+    test('期限が昨日の未完了タスクは期限切れ', () {
+      final task = Task(id: 1, title: 'a', dueDate: DateTime(2026, 7, 31));
+      expect(task.isOverdue(today), isTrue);
+    });
+
+    test('期限が今日のタスクは期限切れではない（当日はセーフ）', () {
+      final task = Task(id: 1, title: 'a', dueDate: DateTime(2026, 8, 1));
+      expect(task.isOverdue(today), isFalse);
+    });
+
+    test('期限が明日のタスクは期限切れではない', () {
+      final task = Task(id: 1, title: 'a', dueDate: DateTime(2026, 8, 2));
+      expect(task.isOverdue(today), isFalse);
+    });
+
+    test('完了済みタスクは期限が過去でも期限切れ扱いしない', () {
+      final task = Task(
+          id: 1, title: 'a', isCompleted: true, dueDate: DateTime(2026, 7, 1));
+      expect(task.isOverdue(today), isFalse);
+    });
+
+    test('期限なしタスクは期限切れにならない', () {
+      const task = Task(id: 1, title: 'a');
+      expect(task.isOverdue(today), isFalse);
+    });
+
+    test('判定は日単位（todayに時刻が付いていても結果は同じ）', () {
+      final task = Task(id: 1, title: 'a', dueDate: DateTime(2026, 8, 1));
+      expect(task.isOverdue(DateTime(2026, 8, 1, 23, 59)), isFalse);
+    });
+  });
+
+  group('Task.copyWith の期限操作（US4 / FR-008）', () {
+    test('期限を設定できる', () {
+      const task = Task(id: 1, title: 'a');
+      final updated = task.copyWith(dueDate: () => DateTime(2026, 8, 10));
+      expect(updated.dueDate, DateTime(2026, 8, 10));
+    });
+
+    test('期限を解除（null）できる', () {
+      final task = Task(id: 1, title: 'a', dueDate: DateTime(2026, 8, 10));
+      final updated = task.copyWith(dueDate: () => null);
+      expect(updated.dueDate, isNull);
+    });
+
+    test('dueDateを渡さなければ既存の期限が維持される', () {
+      final task = Task(id: 1, title: 'a', dueDate: DateTime(2026, 8, 10));
+      final updated = task.copyWith(title: 'b');
+      expect(updated.dueDate, DateTime(2026, 8, 10));
+    });
+  });
 }

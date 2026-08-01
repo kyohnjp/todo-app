@@ -54,12 +54,30 @@ class Task {
     );
   }
 
-  Task copyWith({String? title, bool? isCompleted}) => Task(
+  /// [dueDate] は「渡さない=維持」と「nullを渡す=解除」を区別するため、
+  /// 値ではなく値を返す関数で受け取る（nullable×copyWithの定番パターン）。
+  /// 例: 設定 `copyWith(dueDate: () => date)` ／ 解除 `copyWith(dueDate: () => null)`
+  Task copyWith({
+    String? title,
+    bool? isCompleted,
+    DateTime? Function()? dueDate,
+  }) =>
+      Task(
         id: id,
         title: title ?? this.title,
         isCompleted: isCompleted ?? this.isCompleted,
-        dueDate: dueDate,
+        dueDate: dueDate == null ? this.dueDate : dueDate(),
       );
+
+  /// 期限切れか（FR-009）。期限が[today]より前の日付、かつ未完了のときのみtrue。
+  /// 日単位で比較し、期限当日は期限切れ扱いしない（data-model.md）。
+  bool isOverdue(DateTime today) {
+    final due = dueDate;
+    if (due == null || isCompleted) return false;
+    final dueDay = DateTime(due.year, due.month, due.day);
+    final todayDay = DateTime(today.year, today.month, today.day);
+    return dueDay.isBefore(todayDay);
+  }
 
   static String _formatDate(DateTime date) {
     final y = date.year.toString().padLeft(4, '0');

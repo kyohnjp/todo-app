@@ -11,9 +11,13 @@ enum TaskFilter { all, active, completed }
 /// 各操作はメモリ上の状態を即時更新して通知し、保存は非同期で直列に行う
 /// （research.md R6: 変更のたびに全量保存）。
 class TodoListController extends ChangeNotifier {
-  TodoListController(this._repository);
+  /// [now] は期限切れ判定に使う「現在時刻」の供給源。テストで固定時刻を
+  /// 注入できるようにするための引数（research.md R3）。省略時は実時刻。
+  TodoListController(this._repository, {DateTime Function()? now})
+      : _now = now ?? DateTime.now;
 
   final TaskRepository _repository;
+  final DateTime Function() _now;
   final List<Task> _tasks = [];
   int _nextId = 1;
   Future<void> _pendingSave = Future.value();
@@ -83,6 +87,21 @@ class TodoListController extends ChangeNotifier {
     _commit();
     return true;
   }
+
+  /// 期限を設定・変更・解除する（FR-008）。nullで解除。名前・完了状態には影響しない。
+  void setDueDate(int id, DateTime? dueDate) {
+    final index = _tasks.indexWhere((task) => task.id == id);
+    if (index < 0) return;
+
+    _tasks[index] = _tasks[index].copyWith(dueDate: () => dueDate);
+    _commit();
+  }
+
+  /// 「今日」の基準時刻（DatePickerの初期値などUI向け）。
+  DateTime get today => _now();
+
+  /// タスクが期限切れか（FR-009）。判定基準時刻は注入されたnowを使う。
+  bool isOverdue(Task task) => task.isOverdue(_now());
 
   /// タスクを削除する（FR-004）。
   void remove(int id) {
