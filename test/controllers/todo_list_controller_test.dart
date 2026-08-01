@@ -398,4 +398,49 @@ void main() {
       expect(controller.isOverdue(controller.tasks.single), isTrue);
     });
   });
+
+  group('スケール（SC-004: タスク100件）', () {
+    test('100件登録しても全操作（追加・完了・フィルタ・編集・期限・削除・保存）が正しく動く', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(
+        repository,
+        now: () => DateTime(2026, 8, 1),
+      );
+      await controller.load();
+
+      for (var i = 1; i <= 100; i++) {
+        controller.add('タスク$i');
+      }
+      expect(controller.tasks.length, 100);
+
+      // 偶数idを完了に
+      for (final task in controller.tasks.where((t) => t.id.isEven)) {
+        controller.toggleCompleted(task.id);
+      }
+      controller.setFilter(TaskFilter.completed);
+      expect(controller.visibleTasks.length, 50);
+      controller.setFilter(TaskFilter.active);
+      expect(controller.visibleTasks.length, 50);
+      controller.setFilter(TaskFilter.all);
+
+      // 編集・期限・削除も一通り（tasks[42]=id43は奇数なので未完了側）
+      final target = controller.tasks[42].id;
+      controller.rename(target, '編集済み');
+      controller.setDueDate(target, DateTime(2026, 7, 1));
+      expect(controller.tasks[42].title, '編集済み');
+      expect(controller.isOverdue(controller.tasks[42]), isTrue);
+
+      controller.remove(target);
+      expect(controller.tasks.length, 99);
+
+      // 保存内容が最新状態と一致し、リロード相当で復元できる
+      await controller.idle();
+      expect(repository.stored.length, 99);
+      final reloaded = TodoListController(repository);
+      await reloaded.load();
+      expect(reloaded.tasks.length, 99);
+      // 削除したのは未完了タスクなので、完了50件は全て残る
+      expect(reloaded.tasks.where((t) => t.isCompleted).length, 50);
+    });
+  });
 }
