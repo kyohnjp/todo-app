@@ -115,6 +115,21 @@ void main() {
       controller.toggleCompleted(id);
       expect(controller.tasks.single.isCompleted, false);
     });
+
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('a');
+      await controller.idle();
+      final savesBefore = repository.saveCount;
+
+      controller.toggleCompleted(999);
+
+      expect(controller.tasks.single.isCompleted, false);
+      await controller.idle();
+      expect(repository.saveCount, savesBefore);
+    });
   });
 
   group('remove（FR-004）', () {
@@ -130,6 +145,21 @@ void main() {
       controller.remove(idOfB);
 
       expect(controller.tasks.map((t) => t.title), ['a', 'c']);
+    });
+
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('a');
+      await controller.idle();
+      final savesBefore = repository.saveCount;
+
+      controller.remove(999);
+
+      expect(controller.tasks.length, 1);
+      await controller.idle();
+      expect(repository.saveCount, savesBefore);
     });
   });
 
@@ -217,6 +247,71 @@ void main() {
       controller.setFilter(TaskFilter.active);
 
       expect(notifications, 1);
+    });
+  });
+
+  group('rename（US3 / FR-002/007）', () {
+    test('タスク名だけが変わり、完了状態は維持される', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('牛乳を買う');
+      final id = controller.tasks.single.id;
+      controller.toggleCompleted(id);
+
+      final renamed = controller.rename(id, '牛乳と卵を買う');
+
+      expect(renamed, isTrue);
+      expect(controller.tasks.single.title, '牛乳と卵を買う');
+      expect(controller.tasks.single.isCompleted, true);
+      expect(controller.tasks.single.id, id);
+    });
+
+    test('前後の空白はtrimされる', () async {
+      final controller = TodoListController(RecordingTaskRepository());
+      await controller.load();
+      controller.add('a');
+
+      controller.rename(controller.tasks.single.id, '  b  ');
+
+      expect(controller.tasks.single.title, 'b');
+    });
+
+    test('空・空白のみは拒否し、元の名前を維持して保存もしない', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('元の名前');
+      await controller.idle();
+      final savesBefore = repository.saveCount;
+      final id = controller.tasks.single.id;
+
+      expect(controller.rename(id, ''), isFalse);
+      expect(controller.rename(id, '   '), isFalse);
+      expect(controller.tasks.single.title, '元の名前');
+      await controller.idle();
+      expect(repository.saveCount, savesBefore);
+    });
+
+    test('変更後の名前が保存される（リロード相当で復元できる）', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('編集前');
+
+      controller.rename(controller.tasks.single.id, '編集後');
+      await controller.idle();
+
+      expect(repository.stored.single.title, '編集後');
+    });
+
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
+      final controller = TodoListController(RecordingTaskRepository());
+      await controller.load();
+      controller.add('a');
+
+      expect(controller.rename(999, 'b'), isFalse);
+      expect(controller.tasks.single.title, 'a');
     });
   });
 }

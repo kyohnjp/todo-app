@@ -71,6 +71,19 @@ class TodoListController extends ChangeNotifier {
     _commit();
   }
 
+  /// タスク名を変更する（FR-007）。完了状態・期限には影響しない。
+  /// trim後に空なら拒否してfalseを返し、元の名前を維持する（FR-002）。
+  bool rename(int id, String title) {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return false;
+    final index = _tasks.indexWhere((task) => task.id == id);
+    if (index < 0) return false;
+
+    _tasks[index] = _tasks[index].copyWith(title: trimmed);
+    _commit();
+    return true;
+  }
+
   /// タスクを削除する（FR-004）。
   void remove(int id) {
     final removed = _tasks.length;

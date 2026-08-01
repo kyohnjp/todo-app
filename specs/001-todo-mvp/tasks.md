@@ -97,14 +97,14 @@
 
 ### Tests for User Story 3（憲法II: 必須・実装より先）⚠️
 
-- [ ] T018 [P] [US3] コントローラのrenameテストを追加（title変更、完了状態・期限に影響しない、空・空白は拒否で元の名前維持、保存される）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
-- [ ] T019 [P] [US3] 編集のウィジェットテストを追加（spec US3受け入れシナリオ1〜2: 編集確定で表示変更＋完了状態維持、空文字確定で元の名前維持）in `test/pages/home_page_test.dart` — **失敗を確認**
+- [x] T018 [P] [US3] コントローラのrenameテストを追加（title変更、完了状態・期限に影響しない、空・空白は拒否で元の名前維持、保存される）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
+- [x] T019 [P] [US3] 編集のウィジェットテストを追加（spec US3受け入れシナリオ1〜2: 編集確定で表示変更＋完了状態維持、空文字確定で元の名前維持）in `test/pages/home_page_test.dart` — **失敗を確認**
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] コントローラにrenameを実装 in `lib/controllers/todo_list_controller.dart`
-- [ ] T021 [US3] 編集UI（タスクタップまたは編集ボタン→ダイアログで名前変更）を実装 in `lib/pages/home_page.dart`
-- [ ] T022 [US3] 検証ゲート: analyze/test クリーン、quickstart.md「US3」手動シナリオ実施
+- [x] T020 [US3] コントローラにrenameを実装 in `lib/controllers/todo_list_controller.dart`
+- [x] T021 [US3] 編集UI（タスクタップまたは編集ボタン→ダイアログで名前変更）を実装 in `lib/pages/home_page.dart`
+- [x] T022 [US3] 検証ゲート: analyze/test クリーン、quickstart.md「US3」手動シナリオ実施
 
 **Checkpoint**: ブランチ `feat/us3-edit-title` からPR → レビュー → マージ
 
