@@ -118,16 +118,16 @@
 
 ### Tests for User Story 4（憲法II: 必須・実装より先）⚠️
 
-- [ ] T023 [P] [US4] Taskモデルに`isOverdue`のテストを追加（昨日=切れ、今日=切れない、明日=切れない、完了済みは常に切れない、期限なしは切れない。**固定時刻を渡して判定**）in `test/models/task_test.dart` — **失敗を確認**
-- [ ] T024 [P] [US4] コントローラの期限テストを追加（setDueDate/変更/解除（null）、保存される、**コンストラクタ注入の`now`関数**で期限切れ一覧が決定的に判定できる）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
-- [ ] T025 [P] [US4] 期限のウィジェットテストを追加（spec US4受け入れシナリオ1〜4: 期限日表示、変更/解除の反映、期限切れ強調は未完了のみ。テストでは固定時刻を注入）in `test/pages/home_page_test.dart` — **失敗を確認**
+- [x] T023 [P] [US4] Taskモデルに`isOverdue`のテストを追加（昨日=切れ、今日=切れない、明日=切れない、完了済みは常に切れない、期限なしは切れない。**固定時刻を渡して判定**）in `test/models/task_test.dart` — **失敗を確認**
+- [x] T024 [P] [US4] コントローラの期限テストを追加（setDueDate/変更/解除（null）、保存される、**コンストラクタ注入の`now`関数**で期限切れ一覧が決定的に判定できる）in `test/controllers/todo_list_controller_test.dart` — **失敗を確認**
+- [x] T025 [P] [US4] 期限のウィジェットテストを追加（spec US4受け入れシナリオ1〜4: 期限日表示、変更/解除の反映、期限切れ強調は未完了のみ。テストでは固定時刻を注入）in `test/pages/home_page_test.dart` — **失敗を確認**
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Taskモデルに`isOverdue(DateTime today)`を実装（日単位比較）in `lib/models/task.dart`
-- [ ] T027 [US4] コントローラに`now`関数の注入（デフォルト`DateTime.now`）とsetDueDateを実装 in `lib/controllers/todo_list_controller.dart`
-- [ ] T028 [US4] 期限UI（日付ピッカーで設定/変更/解除、一覧での期限日表示、期限切れ未完了の強調表示）を実装 in `lib/pages/home_page.dart`
-- [ ] T029 [US4] 検証ゲート: analyze/test クリーン、quickstart.md「US4」手動シナリオ実施
+- [x] T026 [US4] Taskモデルに`isOverdue(DateTime today)`を実装（日単位比較）in `lib/models/task.dart`
+- [x] T027 [US4] コントローラに`now`関数の注入（デフォルト`DateTime.now`）とsetDueDateを実装 in `lib/controllers/todo_list_controller.dart`
+- [x] T028 [US4] 期限UI（日付ピッカーで設定/変更/解除、一覧での期限日表示、期限切れ未完了の強調表示）を実装 in `lib/pages/home_page.dart`
+- [x] T029 [US4] 検証ゲート: analyze/test クリーン、quickstart.md「US4」手動シナリオ実施
 
 **Checkpoint**: ブランチ `feat/us4-due-date` からPR → レビュー → マージ。全ストーリー完成
 

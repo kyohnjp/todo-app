@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/todo_list_controller.dart';
+import '../models/task.dart';
 
 /// タスク一覧のホーム画面（このアプリの唯一の画面）。
 class HomePage extends StatefulWidget {
@@ -27,16 +28,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// タスク名の編集ダイアログ（US3）。空文字での保存は拒否され元の名前が残る。
-  Future<void> _showEditDialog(int id, String currentTitle) {
+  /// タスクの編集ダイアログ（US3: 名前 / US4: 期限）。
+  /// 空文字での保存は拒否され元の名前が残る。
+  Future<void> _showEditDialog(Task task) {
     return showDialog<void>(
       context: context,
       builder: (_) => _EditTaskDialog(
-        currentTitle: currentTitle,
-        onSave: (title) => widget.controller.rename(id, title),
+        currentTitle: task.title,
+        currentDueDate: task.dueDate,
+        today: widget.controller.today,
+        onSave: (title) => widget.controller.rename(task.id, title),
+        onDueDateChanged: (dueDate) =>
+            widget.controller.setDueDate(task.id, dueDate),
       ),
     );
   }
+
+  static String _formatDate(DateTime date) =>
+      '${date.year}/${date.month}/${date.day}';
 
   /// Flutter webは日本語フォントを遅延ロードするため、初回描画時の文字幅計測が
   /// 不正確でセグメントのラベルが折り返されたまま残ることがある。
@@ -117,8 +126,10 @@ class _HomePageState extends State<HomePage> {
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
                     final task = tasks[index];
+                    final overdue = widget.controller.isOverdue(task);
+                    final errorColor = Theme.of(context).colorScheme.error;
                     return ListTile(
-                      onTap: () => _showEditDialog(task.id, task.title),
+                      onTap: () => _showEditDialog(task),
                       leading: Checkbox(
                         value: task.isCompleted,
                         onChanged: (_) =>
@@ -133,6 +144,24 @@ class _HomePageState extends State<HomePage> {
                               )
                             : null,
                       ),
+                      subtitle: task.dueDate == null
+                          ? null
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (overdue) ...[
+                                  Icon(Icons.warning_amber_rounded,
+                                      size: 16, color: errorColor),
+                                  const SizedBox(width: 4),
+                                ],
+                                Text(
+                                  '期限: ${_formatDate(task.dueDate!)}',
+                                  style: overdue
+                                      ? TextStyle(color: errorColor)
+                                      : null,
+                                ),
+                              ],
+                            ),
                       trailing: IconButton(
                         onPressed: () => widget.controller.remove(task.id),
                         icon: const Icon(Icons.delete_outline),
@@ -150,13 +179,25 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// タスク名編集ダイアログ。TextEditingControllerの寿命を自身のStateで管理する
-/// （閉じるアニメーション中の破棄済みcontroller参照を防ぐ）。
+/// タスク編集ダイアログ（名前＋期限）。TextEditingControllerの寿命を自身の
+/// Stateで管理する（閉じるアニメーション中の破棄済みcontroller参照を防ぐ）。
+///
+/// 期限の変更は選択した時点で即座に適用される。「保存」「キャンセル」は
+/// タスク名の編集だけに作用する。
 class _EditTaskDialog extends StatefulWidget {
-  const _EditTaskDialog({required this.currentTitle, required this.onSave});
+  const _EditTaskDialog({
+    required this.currentTitle,
+    required this.currentDueDate,
+    required this.today,
+    required this.onSave,
+    required this.onDueDateChanged,
+  });
 
   final String currentTitle;
+  final DateTime? currentDueDate;
+  final DateTime today;
   final bool Function(String title) onSave;
+  final void Function(DateTime? dueDate) onDueDateChanged;
 
   @override
   State<_EditTaskDialog> createState() => _EditTaskDialogState();
@@ -165,6 +206,7 @@ class _EditTaskDialog extends StatefulWidget {
 class _EditTaskDialogState extends State<_EditTaskDialog> {
   late final TextEditingController _controller =
       TextEditingController(text: widget.currentTitle);
+  late DateTime? _dueDate = widget.currentDueDate;
 
   @override
   void dispose() {
@@ -177,15 +219,58 @@ class _EditTaskDialogState extends State<_EditTaskDialog> {
     Navigator.of(context).pop();
   }
 
+  Future<void> _pickDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? widget.today,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() => _dueDate = picked);
+    widget.onDueDateChanged(picked);
+  }
+
+  void _clearDueDate() {
+    setState(() => _dueDate = null);
+    widget.onDueDateChanged(null);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final dueDate = _dueDate;
     return AlertDialog(
-      title: const Text('タスク名を編集'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: const InputDecoration(border: OutlineInputBorder()),
-        onSubmitted: (_) => _save(),
+      title: const Text('タスクを編集'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            onSubmitted: (_) => _save(),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Text(dueDate == null
+                    ? '期限なし'
+                    : '${dueDate.year}/${dueDate.month}/${dueDate.day}'),
+              ),
+              TextButton(
+                onPressed: _pickDueDate,
+                child: Text(dueDate == null ? '期限を設定' : '期限を変更'),
+              ),
+              if (dueDate != null)
+                TextButton(
+                  onPressed: _clearDueDate,
+                  child: const Text('期限を解除'),
+                ),
+            ],
+          ),
+        ],
       ),
       actions: [
         TextButton(

@@ -6,8 +6,12 @@ import 'package:todo_app/pages/home_page.dart';
 import 'package:todo_app/services/task_repository.dart';
 
 /// HomePageを実アプリと同じ構成（実リポジトリ＋モックprefs）で起動する。
-Future<TodoListController> pumpHomePage(WidgetTester tester) async {
-  final controller = TodoListController(TaskRepository());
+/// [now] で「現在時刻」を固定できる（期限切れ判定のテスト用）。
+Future<TodoListController> pumpHomePage(
+  WidgetTester tester, {
+  DateTime Function()? now,
+}) async {
+  final controller = TodoListController(TaskRepository(), now: now);
   await controller.load();
   await tester.pumpWidget(
     MaterialApp(home: HomePage(controller: controller)),
@@ -295,6 +299,68 @@ void main() {
       final reloaded = TodoListController(TaskRepository());
       await reloaded.load();
       expect(reloaded.tasks.single.title, '編集後');
+    });
+  });
+
+  group('US4: 期限（日付）', () {
+    DateTime fixedNow() => DateTime(2026, 8, 1, 10, 30);
+
+    Future<void> openEditDialog(WidgetTester tester, String title) async {
+      await tester.tap(find.widgetWithText(ListTile, title));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('US4-1: 期限付きタスクは一覧に期限日が表示される', (tester) async {
+      final controller = await pumpHomePage(tester, now: fixedNow);
+      await addTask(tester, '牛乳を買う');
+      controller.setDueDate(controller.tasks.single.id, DateTime(2026, 8, 10));
+      await tester.pump();
+
+      expect(find.text('期限: 2026/8/10'), findsOneWidget);
+    });
+
+    testWidgets('US4-1: ダイアログのDatePickerで期限を設定できる', (tester) async {
+      await pumpHomePage(tester, now: fixedNow);
+      await addTask(tester, '牛乳を買う');
+
+      await openEditDialog(tester, '牛乳を買う');
+      await tester.tap(find.text('期限を設定'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK')); // 初期選択=今日(2026/8/1)で確定
+      await tester.pumpAndSettle();
+
+      expect(find.text('期限: 2026/8/1'), findsOneWidget);
+    });
+
+    testWidgets('US4-2: 期限を解除できる', (tester) async {
+      final controller = await pumpHomePage(tester, now: fixedNow);
+      await addTask(tester, '牛乳を買う');
+      controller.setDueDate(controller.tasks.single.id, DateTime(2026, 8, 10));
+      await tester.pump();
+
+      await openEditDialog(tester, '牛乳を買う');
+      await tester.tap(find.text('期限を解除'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('期限:'), findsNothing);
+    });
+
+    testWidgets('US4-3/4-4: 期限切れの未完了タスクだけが強調され、完了にすると強調が消える',
+        (tester) async {
+      final controller = await pumpHomePage(tester, now: fixedNow);
+      await addTask(tester, '昨日期限');
+      await addTask(tester, '明日期限');
+      controller.setDueDate(controller.tasks[0].id, DateTime(2026, 7, 31));
+      controller.setDueDate(controller.tasks[1].id, DateTime(2026, 8, 2));
+      await tester.pump();
+
+      // 昨日期限の未完了タスクのみ警告アイコンが付く
+      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+
+      // 完了にすると強調が消える（US4-4）
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+      expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     });
   });
 }

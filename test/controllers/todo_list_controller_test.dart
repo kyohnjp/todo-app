@@ -314,4 +314,88 @@ void main() {
       expect(controller.tasks.single.title, 'a');
     });
   });
+
+  group('期限（US4 / FR-008/009）', () {
+    test('setDueDateで期限を設定でき、保存される', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('a');
+      final id = controller.tasks.single.id;
+
+      controller.setDueDate(id, DateTime(2026, 8, 10));
+      await controller.idle();
+
+      expect(controller.tasks.single.dueDate, DateTime(2026, 8, 10));
+      expect(repository.stored.single.dueDate, DateTime(2026, 8, 10));
+    });
+
+    test('期限を変更・解除（null）できる', () async {
+      final controller = TodoListController(RecordingTaskRepository());
+      await controller.load();
+      controller.add('a');
+      final id = controller.tasks.single.id;
+
+      controller.setDueDate(id, DateTime(2026, 8, 10));
+      controller.setDueDate(id, DateTime(2026, 8, 20));
+      expect(controller.tasks.single.dueDate, DateTime(2026, 8, 20));
+
+      controller.setDueDate(id, null);
+      expect(controller.tasks.single.dueDate, isNull);
+    });
+
+    test('期限の設定はタスク名・完了状態に影響しない', () async {
+      final controller = TodoListController(RecordingTaskRepository());
+      await controller.load();
+      controller.add('名前');
+      final id = controller.tasks.single.id;
+      controller.toggleCompleted(id);
+
+      controller.setDueDate(id, DateTime(2026, 8, 10));
+
+      expect(controller.tasks.single.title, '名前');
+      expect(controller.tasks.single.isCompleted, true);
+    });
+
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('a');
+      await controller.idle();
+      final savesBefore = repository.saveCount;
+
+      controller.setDueDate(999, DateTime(2026, 8, 10));
+
+      expect(controller.tasks.single.dueDate, isNull);
+      await controller.idle();
+      expect(repository.saveCount, savesBefore);
+    });
+
+    test('注入したnow関数で期限切れ判定が決定的にできる', () async {
+      final controller = TodoListController(
+        RecordingTaskRepository(),
+        now: () => DateTime(2026, 8, 1, 10, 30),
+      );
+      await controller.load();
+      controller.add('昨日期限');
+      controller.add('明日期限');
+      final yesterday = controller.tasks[0].id;
+      final tomorrow = controller.tasks[1].id;
+      controller.setDueDate(yesterday, DateTime(2026, 7, 31));
+      controller.setDueDate(tomorrow, DateTime(2026, 8, 2));
+
+      expect(controller.isOverdue(controller.tasks[0]), isTrue);
+      expect(controller.isOverdue(controller.tasks[1]), isFalse);
+    });
+
+    test('nowを注入しない場合は実時刻で動く（デフォルト値の確認）', () async {
+      final controller = TodoListController(RecordingTaskRepository());
+      await controller.load();
+      controller.add('大昔の期限');
+      controller.setDueDate(controller.tasks.single.id, DateTime(2000, 1, 1));
+
+      expect(controller.isOverdue(controller.tasks.single), isTrue);
+    });
+  });
 }
