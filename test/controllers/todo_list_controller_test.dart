@@ -115,6 +115,21 @@ void main() {
       controller.toggleCompleted(id);
       expect(controller.tasks.single.isCompleted, false);
     });
+
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('a');
+      await controller.idle();
+      final savesBefore = repository.saveCount;
+
+      controller.toggleCompleted(999);
+
+      expect(controller.tasks.single.isCompleted, false);
+      await controller.idle();
+      expect(repository.saveCount, savesBefore);
+    });
   });
 
   group('remove（FR-004）', () {
@@ -130,6 +145,21 @@ void main() {
       controller.remove(idOfB);
 
       expect(controller.tasks.map((t) => t.title), ['a', 'c']);
+    });
+
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
+      final repository = RecordingTaskRepository();
+      final controller = TodoListController(repository);
+      await controller.load();
+      controller.add('a');
+      await controller.idle();
+      final savesBefore = repository.saveCount;
+
+      controller.remove(999);
+
+      expect(controller.tasks.length, 1);
+      await controller.idle();
+      expect(repository.saveCount, savesBefore);
     });
   });
 
@@ -275,7 +305,7 @@ void main() {
       expect(repository.stored.single.title, '編集後');
     });
 
-    test('存在しないidの場合は何も起きない', () async {
+    test('存在しないidの場合は何も起きない（spec Edge Case）', () async {
       final controller = TodoListController(RecordingTaskRepository());
       await controller.load();
       controller.add('a');
