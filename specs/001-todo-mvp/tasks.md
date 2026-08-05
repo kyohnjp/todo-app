@@ -137,10 +137,10 @@
 
 **Purpose**: 仕上げとspec全体の検収
 
-- [ ] T030 [P] タスク100件での動作テストを追加（コントローラに100件投入して操作が正しく完了する = SC-004の自動検証）in `test/controllers/todo_list_controller_test.dart`
-- [ ] T031 [P] `README.md` をこのアプリの説明に更新（何のアプリか、起動方法、SDD練習リポジトリである旨、specs/へのリンク）
-- [ ] T032 quickstart.md「4. データ破損時の回復」の手動検証（DevToolsでlocalStorage破壊→空一覧で起動 = FR-011）と、spec Success Criteria SC-001〜005の最終確認
-- [ ] T033 検証ゲート: analyze/test クリーン → ブランチ `chore/polish` からPR → レビュー → マージ
+- [x] T030 [P] タスク100件での動作テストを追加（コントローラに100件投入して操作が正しく完了する = SC-004の自動検証）in `test/controllers/todo_list_controller_test.dart`
+- [x] T031 [P] `README.md` をこのアプリの説明に更新（何のアプリか、起動方法、SDD練習リポジトリである旨、specs/へのリンク）
+- [x] T032 quickstart.md「4. データ破損時の回復」の手動検証（DevToolsでlocalStorage破壊→空一覧で起動 = FR-011）と、spec Success Criteria SC-001〜005の最終確認
+- [x] T033 検証ゲート: analyze/test クリーン → ブランチ `chore/polish` からPR → レビュー → マージ
 
 ---
 
